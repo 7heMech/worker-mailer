@@ -55,13 +55,13 @@ export function decode(data: Uint8Array): string {
 }
 
 export function base64Encode(str: string): string {
-  const bytes = encode(str)
-  let binString = ''
+  const chunks: string[] = []
   const chunkSize = 8192
+  const bytes = encode(str)
   for (let i = 0; i < bytes.length; i += chunkSize) {
-    binString += String.fromCharCode(...bytes.subarray(i, i + chunkSize))
+    chunks.push(String.fromCharCode(...bytes.subarray(i, i + chunkSize)))
   }
-  return btoa(binString)
+  return btoa(chunks.join(''))
 }
 
 export function encodeQuotedPrintable(text: string, lineLength = 76): string {
