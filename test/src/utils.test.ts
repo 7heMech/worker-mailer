@@ -4,6 +4,7 @@ import {
   execTimeout,
   encode,
   decode,
+  base64Encode,
   encodeQuotedPrintable,
 } from '../../src/utils'
 import * as libqp from 'libqp'
@@ -100,6 +101,44 @@ describe('encode/decode', () => {
     const decoded = decode(encoded)
 
     expect(decoded).toBe(original)
+  })
+})
+
+describe('base64Encode', () => {
+  it('should encode standard ASCII strings exactly like btoa()', () => {
+    expect(base64Encode('testuser')).toBe('dGVzdHVzZXI=')
+    expect(base64Encode('password123')).toBe('cGFzc3dvcmQxMjM=')
+  })
+
+  it('should safely encode Cyrillic characters without throwing InvalidCharacterError', () => {
+    expect(base64Encode('тест')).toBe('0YLQtdGB0YI=')
+    expect(base64Encode('потребител')).toBe('0L/QvtGC0YDQtdCx0LjRgtC10Ls=')
+  })
+
+  it('should safely encode complex AUTH PLAIN payloads with Cyrillic characters', () => {
+    const username = 'потребител@example.bg'
+    const password = 'парола'
+    
+    const payload = `\u0000${username}\u0000${password}`
+    const expectedBase64 = 'AAnQvtGC0YDQtdCx0LjRgtC10L1AaHpuLmJnANGA0LDRgNC+0LvQsA=='
+    
+    expect(base64Encode(payload)).toBe(expectedBase64)
+  })
+
+  it('should safely encode Emoji and other multi-byte characters', () => {
+    expect(base64Encode('hello 🌍')).toBe('aGVsbG8g8J+MjQ==')
+  })
+
+  it('should process very large strings in chunks without call stack errors', () => {
+    const largeCyrillic = 'тест'.repeat(2000) // 16,000 bytes (exceeds our 8192 chunk limit)
+    expect(() => base64Encode(largeCyrillic)).not.toThrow()
+    
+    const largeAscii = 'a'.repeat(20000)
+    expect(base64Encode(largeAscii)).toBe(btoa(largeAscii))
+  })
+
+  it('should handle empty strings', () => {
+    expect(base64Encode('')).toBe('')
   })
 })
 
