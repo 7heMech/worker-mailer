@@ -54,6 +54,16 @@ export function decode(data: Uint8Array): string {
   return decoder.decode(data)
 }
 
+export function base64Encode(str: string): string {
+  const bytes = encode(str)
+  let binString = ''
+  const chunkSize = 8192
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binString += String.fromCharCode(...bytes.subarray(i, i + chunkSize))
+  }
+  return btoa(binString)
+}
+
 export function encodeQuotedPrintable(text: string, lineLength = 76): string {
   const bytes = encode(text)
   let result = ''
