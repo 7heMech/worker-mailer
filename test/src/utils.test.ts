@@ -120,7 +120,10 @@ describe('base64Encode', () => {
     const password = 'парола'
     
     const payload = `\u0000${username}\u0000${password}`
-    const expectedBase64 = 'AAnQvtGC0YDQtdCx0LjRgtC10L1AaHpuLmJnANGA0LDRgNC+0LvQsA=='
+    
+    // Using Buffer guarantees the expected base64 is accurately generated using Node's native bindings.
+    // It seamlessly adapts to any username or domain changes.
+    const expectedBase64 = Buffer.from(payload, 'utf-8').toString('base64')
     
     expect(base64Encode(payload)).toBe(expectedBase64)
   })
@@ -130,7 +133,7 @@ describe('base64Encode', () => {
   })
 
   it('should process very large strings in chunks without call stack errors', () => {
-    const largeCyrillic = 'тест'.repeat(2000) // 16,000 bytes (exceeds our 8192 chunk limit)
+    const largeCyrillic = 'тест'.repeat(2000)
     expect(() => base64Encode(largeCyrillic)).not.toThrow()
     
     const largeAscii = 'a'.repeat(20000)
